@@ -54,10 +54,17 @@ int main(int argc, char *argv[]) {
 	measurement_collect(tst, l);
 	ROOTONLY printf("Confidence: local analysis...\n");
 	measurement_analyze(tst, l, -1.0);
-	ROOTONLY printf("Confidence: remote analysis\n");
+
+	if (tst->rank_mapping) {
+		ROOTONLY printf("Confidence: saving local results\n");
+		measurement_serialize(tst, l, my_rank);
+	}
+
+	ROOTONLY printf("Confidence: aggregate results\n");
 	comm_aggregate(g, l);
+	ROOTONLY printf("Confidence: remote analysis\n");
 	measurement_analyze(tst, g, -1.0);
-	ROOTONLY printf("Confidence: saving results\n");
+	ROOTONLY printf("Confidence: saving global results\n");
 	measurement_serialize(tst, g, root_rank);
 
 	/* free measurement and test structs */

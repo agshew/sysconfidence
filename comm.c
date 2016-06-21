@@ -145,7 +145,7 @@ void comm_aggregate(measurement_p g, measurement_p l) {
 #else				/* MPI case */
 	for (i = 0; i < l->num_histograms; i++) {
 		ierr += MPI_Allreduce(l->hist[i].dist, g->hist[i].dist, l->nbins,
-				MPI_INTEGER8, MPI_SUM, MPI_COMM_WORLD);
+				MPI_INT64_T, MPI_SUM, MPI_COMM_WORLD);
 	}
 
 	assert(ierr == 0);

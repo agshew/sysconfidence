@@ -34,8 +34,8 @@ XDD_LIBS =
 # where are the MPI libraries and which to include?
 #    MPI_LIBDIR = -L/usr/lib64/openmpi/1.3.1-gcc
 #    MPI_LIBS   = -lmpi
-MPI_LIBDIR = 
-MPI_LIBS   =
+MPI_LIBDIR = -L$(MPI_ROOT)/lib
+MPI_LIBS   = -lmpi
 
 # compiler and flags
 
@@ -48,5 +48,5 @@ CFLAGS   = -m64 -O3  $(USE_XDD) $(USE_SHMEM)
 GCC	 = gcc
 
 # libraries
-LIBS = $(MPI_LIBDIR) $(MPI_LIBS) $(SHMEM_LIBS) $(XDD_LIBS) -lpthread -lrt
+LIBS = $(MPI_LIBDIR) $(MPI_LIBS) $(SHMEM_LIBS) $(XDD_LIBS) -lpthread -lrt -lm -lz
 

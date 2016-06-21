@@ -42,7 +42,8 @@
 void setdefaults(test_p tst) {
 	tst->num_messages = 100000;	/* messages per cycle */
 	tst->num_cycles = 10;		/* cycles -- future: time limit the data collection */
-	tst->num_warmup = 100;	/* keep this < 1% of tst->num_messages */
+	tst->num_warmup = 100;		/* keep this < 1% of tst->num_messages */
+	tst->max_duration = 172800.0;	/* limit duration to under 2 days */
 	/* tst->total_messages = (uint64_t)(tst->num_cycles) *
 		(uint64_t)(tst->num_messages) * (uint64_t)(num_ranks-1); */
 	tst->buf_len = 1;		/* small message */
@@ -71,7 +72,7 @@ void general_options(test_p tst, int argc, char *argv[]) {
 	ierr = 0;
 
 	/* parse test names and common options */
-	while ((opt = getopt(argc, argv, "t:m:n:w:N:lrhB:C:G:M:W:X:")) != -1) {
+	while ((opt = getopt(argc, argv, "t:m:n:w:N:d:D:lrhB:C:G:M:W:X:")) != -1) {
 		switch (opt) {
 			case 't':
 				if (strcmp(optarg,"net")==0) {
@@ -111,6 +112,11 @@ void general_options(test_p tst, int argc, char *argv[]) {
 			case 'N':
 				strncpy(tst->case_name, optarg, NAMEBUFFSIZE);
 				if (strlen(tst->case_name) == 0)
+					ierr++;
+				break;
+			case 'D':
+				tst->max_duration = strtod(optarg, NULL);
+				if (tst->max_duration <= 0.0)
 					ierr++;
 				break;
 			case 'h':
@@ -279,6 +285,7 @@ void print_help(test_p tst, char *progname) {
 	fprintf(stderr, "\t -w <binwidth> \t width of FIRST histogram bin in seconds (default: %g)\n", tst->bin_size);
 	fprintf(stderr, "\t -m <time>     \t reset maximum message time to bin (log binning only)\n");
 	fprintf(stderr, "\t -n <bins>     \t number of bins in histograms (default: %d)\n", tst->num_bins);
+	fprintf(stderr, "\t -D <duration> \t maximum duration of test in seconds (default: %g)\n", tst->max_duration);
 	fprintf(stderr, "NET/BIT OPTIONS:\n");
 	fprintf(stderr, "\t -B <buflen>   \t buffer length for message tests in bytes (default: %d)\n", tst->buf_len);
 	fprintf(stderr, "\t -C <cycles>   \t number of cycles of all-pairs collections (default: %d)\n", tst->num_cycles);

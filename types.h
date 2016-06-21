@@ -86,6 +86,7 @@ typedef struct test {
 	int num_warmup;         /* keep this < 1% of num_messages */
 	int num_messages;       /* messages per cycle*/
 	int num_cycles;         /* how many times to cycle through the test */
+	double max_duration;    /* maximum duration of the test in seconds */
 	/* uint64_t total_messages; */ /* num_cycles * num_messages * (num_ranks-1) */
 	/* histogram options */
 	int num_bins;           /* number of bins */
@@ -96,7 +97,7 @@ typedef struct test {
 	int buf_len;
 	/* misc options */
 	char log_binning;       /* logarithmic binning (yes/no) */
-	char rank_mapping;      /* whether to output rank mapping */
+	char rank_mapping;      /* whether to output rank mapping and stats */
 	/* arguments to pass to io test */
 	int argc;
 	char **argv;

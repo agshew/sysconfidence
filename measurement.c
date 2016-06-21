@@ -289,7 +289,7 @@ void measurement_write_cdf(test_p tst, measurement_p m) {
 	char fname[FNAMESIZE];
 	double *cdf;
 	double binwidth, binbot, bintop;
-	FILE *Fcdf;
+	gzFile Fcdf;
 	snprintf(fname, FNAMESIZE, "%s/%s.CDF.%d", tst->case_name, m->label, my_rank);
 
 	size_t cdf_size = m->num_histograms*sizeof(double);
@@ -297,31 +297,31 @@ void measurement_write_cdf(test_p tst, measurement_p m) {
 	assert(cdf != NULL);
 	memset(cdf,0,cdf_size);
 
-	Fcdf = fopen(fname, "w");
+	Fcdf = gzopen(fname, "w");
 	assert(Fcdf != NULL);
 	measurement_print_header(Fcdf, tst, m->label, NULL);
 
 	/* print histogram labels */
-	fprintf(Fcdf, "#%6s %18s ", "bin", " (us) to  (us)");
+	gzprintf(Fcdf, "#%6s %18s ", "bin", " (us) to  (us)");
 	for (j = 0; j < m->num_histograms; j++) {
-		fprintf(Fcdf, "%15s ", m->hist[j].label);
+		gzprintf(Fcdf, "%15s ", m->hist[j].label);
 	}
-	fprintf(Fcdf, "\n");
+	gzprintf(Fcdf, "\n");
 
 	/* print the values */
 	for (i = 0; i < m->nbins; i++) {
 		binbot = bin2time(tst,i);
 		bintop = bin2time(tst,(i + 1));
 		binwidth = bintop - binbot;
-		fprintf(Fcdf, "%6d %11.4g %11.4g ", i, binbot * 1.0e+6, bintop * 1.0e+6);
+		gzprintf(Fcdf, "%6d %11.4g %11.4g ", i, binbot * 1.0e+6, bintop * 1.0e+6);
 		for (j = 0; j < m->num_histograms; j++) {
 			cdf[j] += (double)(m->hist[j].dist[i]) / (double)NODIVIDEBYZERO(m->hist[j].nsamples);
-			fprintf(Fcdf, "%15.8e ", cdf[j]);
+			gzprintf(Fcdf, "%15.8e ", cdf[j]);
 		}
-		fprintf(Fcdf, "\n");
+		gzprintf(Fcdf, "\n");
 	}
 
-	fclose(Fcdf);
+	gzclose(Fcdf);
 	free(cdf);
 }
 
@@ -332,34 +332,34 @@ void measurement_write_pdf(test_p tst, measurement_p m) {
 	int i,j;
 	char fname[FNAMESIZE];
 	double binwidth, binbot, bintop;
-	FILE *Fpdf;
+	gzFile Fpdf;
 	snprintf(fname, FNAMESIZE, "%s/%s.PDF.%d", tst->case_name, m->label, my_rank);
 
-	Fpdf = fopen(fname, "w");
+	Fpdf = gzopen(fname, "w");
 	assert(Fpdf != NULL);
 	measurement_print_header(Fpdf, tst, m->label, NULL);
 
 	/* print histogram labels */
-	fprintf(Fpdf, "#%6s %18s ", "bin", " (us) to  (us)");
+	gzprintf(Fpdf, "#%6s %18s ", "bin", " (us) to  (us)");
 	for (j = 0; j < m->num_histograms; j++) {
-		fprintf(Fpdf, "%15s ", m->hist[j].label);
+		gzprintf(Fpdf, "%15s ", m->hist[j].label);
 	}
-	fprintf(Fpdf, "\n");
+	gzprintf(Fpdf, "\n");
 
 	/* print the values */
 	for (i = 0; i < m->nbins; i++) {
 		binbot = bin2time(tst,i);
 		bintop = bin2time(tst,(i + 1));
 		binwidth = bintop - binbot;
-		fprintf(Fpdf, "%6d %11.4g %11.4g ", i, binbot * 1.0e+6, bintop * 1.0e+6);
+		gzprintf(Fpdf, "%6d %11.4g %11.4g ", i, binbot * 1.0e+6, bintop * 1.0e+6);
 		for (j = 0; j < m->num_histograms; j++) {
-			fprintf(Fpdf, "%15.8e ", (double)(m->hist[j].dist[i]) / binwidth
+			gzprintf(Fpdf, "%15.8e ", (double)(m->hist[j].dist[i]) / binwidth
 					/ (double)NODIVIDEBYZERO(m->hist[j].nsamples) );
 		}
-		fprintf(Fpdf, "\n");
+		gzprintf(Fpdf, "\n");
 	}
 
-	fclose(Fpdf);
+	gzclose(Fpdf);
 }
 
 /**
@@ -369,32 +369,32 @@ void measurement_write_hist(test_p tst, measurement_p m) {
 	int i,j;
 	char fname[FNAMESIZE];
 	double binwidth, binbot, bintop;
-	FILE *Fhist;
+	gzFile Fhist;
 	snprintf(fname, FNAMESIZE, "%s/%s.HIST.%d", tst->case_name, m->label, my_rank);
 
-	Fhist = fopen(fname, "w");
+	Fhist = gzopen(fname, "w");
 	assert(Fhist != NULL);
 	measurement_print_header(Fhist, tst, m->label, NULL);
 
 	/* print histogram labels */
-	fprintf(Fhist, "#%6s %18s ", "bin", " (us) to  (us)");
+	gzprintf(Fhist, "#%6s %18s ", "bin", " (us) to  (us)");
 	for (j = 0; j < m->num_histograms; j++) {
-		fprintf(Fhist, "%15s ", m->hist[j].label);
+		gzprintf(Fhist, "%15s ", m->hist[j].label);
 	}
-	fprintf(Fhist, "\n");
+	gzprintf(Fhist, "\n");
 
 	/* print the values */
 	for (i = 0; i < m->nbins; i++) {
 		binbot = bin2time(tst,i);
 		bintop = bin2time(tst,(i + 1));
 		binwidth = bintop - binbot;
-		fprintf(Fhist, "%6d %11.4g %11.4g ", i, binbot * 1.0e+6, bintop * 1.0e+6);
+		gzprintf(Fhist, "%6d %11.4g %11.4g ", i, binbot * 1.0e+6, bintop * 1.0e+6);
 		for (j = 0; j < m->num_histograms; j++) {
-			fprintf(Fhist, "%15"PRIu64" ", m->hist[j].dist[i] );
+			gzprintf(Fhist, "%15"PRIu64" ", m->hist[j].dist[i] );
 		}
-		fprintf(Fhist, "\n");
+		gzprintf(Fhist, "\n");
 	}
-	fclose(Fhist);
+	gzclose(Fhist);
 }
 
 
@@ -402,64 +402,77 @@ void measurement_write_hist(test_p tst, measurement_p m) {
  * \brief Save the histogram summary stats to disk
  **********************************************/
 void measurement_fmthist(test_p tst, histogram_p h, char *label) {
+	int buf_len = tst->buf_len << 1;
 	char fname[FNAMESIZE];
-	FILE *Fstat;
+	gzFile Fstat;
 	snprintf(fname, FNAMESIZE, "%s/%s.STAT.%s.%d", tst->case_name, label, h->label, my_rank);
 
-	Fstat = fopen(fname, "w");
+	Fstat = gzopen(fname, "w");
 	assert(Fstat != NULL);
 	measurement_print_header(Fstat, tst, label, h->label);
 
-	fprintf(Fstat, "# Number of Samples: %"PRIu64" in %d bins\n", h->nsamples, tst->num_bins);	/* number of samples in the distribution */
-	fprintf(Fstat, "\n");
-	fprintf(Fstat, "Minimum:      %15.2g usec     %15.2g * minLatency\n", h->min0 * 1.0e+6, 1.0);			/* minimum: 0, 0-scaled */
-	fprintf(Fstat, "Mode:         %15.2g usec     %15.2g * minLatency\n", h->mod0 * 1.0e+6, h->mods);		/* mode: 0, 0-scaled */
-	fprintf(Fstat, "Median:       %15.2g usec     %15.2g * minLatency\n", h->med0 * 1.0e+6, h->meds);		/* median: 0, 0-scaled */
-	fprintf(Fstat, "Mean:         %15.2g usec     %15.2g * minLatency\n", h->m10 * 1.0e+6, h->m10 / h->min0);	/* 1st moment: 0, 0-scaled */
-	fprintf(Fstat, "Maximum:      %15.2g usec     %15.2g * minLatency\n", h->max0 * 1.0e+6, h->maxs);		/* maximum: 0, 0-scaled */
-	fprintf(Fstat, "\n");
-	fprintf(Fstat, "R1(Mean):     %15.2g usec     %15.2g * minLatency\n", h->m10 * 1.0e+6, h->m1s);			/* 1st moment: 0,min-scaled */
-	fprintf(Fstat, "R2(Variance): %15.2g usec     %15.2g * minLatency\n", sqrt(h->m20) * 1.0e+6, sqrt(h->m2s));	/* 2nd moment: 0,min-scaled */
-	fprintf(Fstat, "R3(Skewness): %15.2g usec     %15.2g * minLatency\n", cbrt(h->m30) * 1.0e+6, cbrt(h->m3s));	/* 3rd moment: 0,min-scaled */
-	fprintf(Fstat, "R4(Kurtosis): %15.2g usec     %15.2g * minLatency\n", sqrt(sqrt(h->m40)) * 1.0e+6, sqrt(sqrt(h->m4s)));	/* 4th moment: 0,min-scaled */
-	fprintf(Fstat, "\n");
-	fprintf(Fstat, "Mean:         %15.2g seconds     %15.2g * minLatency\n", h->m10, h->m1s);			/* 1st moment: 0,min-scaled */
-	fprintf(Fstat, "Variance:     %15.2g seconds**2  %15.2g * minLatency**2\n", h->m20, h->m2s);			/* 2nd moment: 0,min-scaled */
-	fprintf(Fstat, "Skewness:     %15.2g seconds**3  %15.2g * minLatency**3\n", h->m30, h->m3s);			/* 3rd moment: 0,min-scaled */
-	fprintf(Fstat, "Kurtosis:     %15.2g seconds**4  %15.2g * minLatency**4\n", h->m40, h->m4s);			/* 4th moment: 0,min-scaled */
-	fclose(Fstat);
+	gzprintf(Fstat, "# Number of Samples: %"PRIu64" in %d bins\n", h->nsamples, tst->num_bins);	/* number of samples in the distribution */
+	gzprintf(Fstat, "\n");
+	gzprintf(Fstat, "Minimum:      %15.2g usec     %15.2g * minLatency\n", h->min0 * 1.0e+6, 1.0);			/* minimum: 0, 0-scaled */
+	gzprintf(Fstat, "Mode:         %15.2g usec     %15.2g * minLatency\n", h->mod0 * 1.0e+6, h->mods);		/* mode: 0, 0-scaled */
+	gzprintf(Fstat, "Median:       %15.2g usec     %15.2g * minLatency\n", h->med0 * 1.0e+6, h->meds);		/* median: 0, 0-scaled */
+	gzprintf(Fstat, "Mean:         %15.2g usec     %15.2g * minLatency\n", h->m10 * 1.0e+6, h->m10 / h->min0);	/* 1st moment: 0, 0-scaled */
+	gzprintf(Fstat, "Maximum:      %15.2g usec     %15.2g * minLatency\n", h->max0 * 1.0e+6, h->maxs);		/* maximum: 0, 0-scaled */
+	gzprintf(Fstat, "\n");
+	gzprintf(Fstat, "R1(Mean):     %15.2g usec     %15.2g * minLatency\n", h->m10 * 1.0e+6, h->m1s);			/* 1st moment: 0,min-scaled */
+	gzprintf(Fstat, "R2(Variance): %15.2g usec     %15.2g * minLatency\n", sqrt(h->m20) * 1.0e+6, sqrt(h->m2s));	/* 2nd moment: 0,min-scaled */
+	gzprintf(Fstat, "R3(Skewness): %15.2g usec     %15.2g * minLatency\n", cbrt(h->m30) * 1.0e+6, cbrt(h->m3s));	/* 3rd moment: 0,min-scaled */
+	gzprintf(Fstat, "R4(Kurtosis): %15.2g usec     %15.2g * minLatency\n", sqrt(sqrt(h->m40)) * 1.0e+6, sqrt(sqrt(h->m4s)));	/* 4th moment: 0,min-scaled */
+	gzprintf(Fstat, "\n");
+	gzprintf(Fstat, "Mean:         %15.2g seconds     %15.2g * minLatency\n", h->m10, h->m1s);			/* 1st moment: 0,min-scaled */
+	gzprintf(Fstat, "Variance:     %15.2g seconds**2  %15.2g * minLatency**2\n", h->m20, h->m2s);			/* 2nd moment: 0,min-scaled */
+	gzprintf(Fstat, "Skewness:     %15.2g seconds**3  %15.2g * minLatency**3\n", h->m30, h->m3s);			/* 3rd moment: 0,min-scaled */
+	gzprintf(Fstat, "Kurtosis:     %15.2g seconds**4  %15.2g * minLatency**4\n", h->m40, h->m4s);			/* 4th moment: 0,min-scaled */
+
+	if (strcmp(h->label, "onNodePairwise") == 0 ||
+	    strcmp(h->label, "onNodePairwiseMinimum") == 0 ||
+	    strcmp(h->label, "offNodePairwise") == 0 ||
+	    strcmp(h->label, "offNodePairwiseMinimum") == 0) {
+	gzprintf(Fstat, "\n");
+		gzprintf(Fstat, "Minimum:      %15.2g MB/s\n", buf_len / (h->max0 * 1.0e+6));				/* minimum: 0, 0-scaled */
+		gzprintf(Fstat, "Mode:         %15.2g MB/s\n", buf_len / (h->mod0 * 1.0e+6));				/* mode: 0, 0-scaled */
+		gzprintf(Fstat, "Median:       %15.2g MB/s\n", buf_len / (h->med0 * 1.0e+6));				/* median: 0, 0-scaled */
+		gzprintf(Fstat, "Mean:         %15.2g MB/s\n", buf_len / (h->m10 * 1.0e+6));				/* 1st moment: 0, 0-scaled */
+		gzprintf(Fstat, "Maximum:      %15.2g MB/s\n", buf_len / (h->min0 * 1.0e+6));				/* maximum: 0, 0-scaled */
+	}
+	gzclose(Fstat);
 }
 
 /**
  \brief Writes the header with the configuration information
 */
-void measurement_print_header(FILE *outfile, test_p tst, char *measurement_label, char *hist_label) {
+void measurement_print_header(gzFile outfile, test_p tst, char *measurement_label, char *hist_label) {
 	int i;
-	fprintf(outfile, "%s",COPYRIGHT);
-	fprintf(outfile, "# Casename:          %s\n", tst->case_name);
-	fprintf(outfile, "# TestType:          %d\n", tst->test_type);
-	fprintf(outfile, "# NumRanks:          %d\n", num_ranks);
+	gzprintf(outfile, "%s",COPYRIGHT);
+	gzprintf(outfile, "# Casename:          %s\n", tst->case_name);
+	gzprintf(outfile, "# TestType:          %d\n", tst->test_type);
+	gzprintf(outfile, "# NumRanks:          %d\n", num_ranks);
 	if (measurement_label != NULL)
-		fprintf(outfile, "# MLabel:            %s\n", measurement_label);
+		gzprintf(outfile, "# MLabel:            %s\n", measurement_label);
 	if (hist_label != NULL)
-		fprintf(outfile, "# HLabel:            %s\n", hist_label);
+		gzprintf(outfile, "# HLabel:            %s\n", hist_label);
 	if (tst->test_type == IO_TEST) {
-		fprintf(outfile, "# Operation Size:    %d\n", tst->buf_len);
-		fprintf(outfile, "# Operation Pattern: %d cycle(s) of %d operations per node\n", tst->num_cycles, tst->num_messages);
+		gzprintf(outfile, "# Operation Size:    %d\n", tst->buf_len);
+		gzprintf(outfile, "# Operation Pattern: %d cycle(s) of %d operations per node\n", tst->num_cycles, tst->num_messages);
 		/* print xdd args */
-		fprintf(outfile, "# XDD Arguments:     ");
+		gzprintf(outfile, "# XDD Arguments:     ");
 		for (i=1; i<tst->argc; i++)
-			fprintf(outfile, "%s ", tst->argv[i]);
-		fprintf(outfile, "\n");
+			gzprintf(outfile, "%s ", tst->argv[i]);
+		gzprintf(outfile, "\n");
 	} else {
-		fprintf(outfile, "# Message Size:      %d\n", tst->buf_len);
-		fprintf(outfile, "# Message Pattern:   %d cycle(s) through an all-pairs schedule\n", tst->num_cycles);
-		fprintf(outfile, "#                    of %d warmups and %d messages per pair\n", tst->num_warmup, tst->num_messages);
+		gzprintf(outfile, "# Message Size:      %d\n", tst->buf_len);
+		gzprintf(outfile, "# Message Pattern:   %d cycle(s) through an all-pairs schedule\n", tst->num_cycles);
+		gzprintf(outfile, "#                    of %d warmups and %d messages per pair\n", tst->num_warmup, tst->num_messages);
 	}
 	if (tst->log_binning == 1) {
-		fprintf(outfile, "# Binning:           Logarithmic, ending at %g seconds\n", tst->max_hist_time);
+		gzprintf(outfile, "# Binning:           Logarithmic, ending at %g seconds\n", tst->max_hist_time);
 	} else {
-		fprintf(outfile, "# Binning:           Linear, ending at %g seconds\n", tst->max_hist_time);
+		gzprintf(outfile, "# Binning:           Linear, ending at %g seconds\n", tst->max_hist_time);
 	}
 }
 

@@ -30,7 +30,9 @@
 
 #include <unistd.h>
 #include <sys/time.h>
+#include <stdio.h>
 #include "config.h"
+#include "comm.h"
 
 #define  ORBTIMER_LIBRARY
 #include "orbtimer.h"
@@ -61,6 +63,7 @@ void ORB_calibrate() {
 	cmin = ORB_min_lat_cyc;
 	gmin = GTD_min_lat_cyc + ORB_avg_lat_cyc;
 	for (j = 0; j < 4; j++) {
+		ROOTONLY printf("Confidence: ORB_calibrate j %d of 4\n", j+1);
 		nsam = csum = gsum = 0;	/* keep only last */
 		for (i = 0; i < 1000000; i++) {	/* sample */
 			ORB_read(t1);
@@ -78,6 +81,8 @@ void ORB_calibrate() {
 				gsum += c32;
 				nsam++;
 			}
+			if (i % 100000 == 0)
+				ROOTONLY printf("Confidence: ORB_calibrate i %d of 1000000\n", i);
 		}
 		ndummy += nsam + csum + gsum;
 	}

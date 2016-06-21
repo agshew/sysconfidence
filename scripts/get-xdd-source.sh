@@ -18,7 +18,7 @@
 #  systemburn-info@googlegroups.com
 
 
-REPO=/ccs/proj/csc040/var/git/xdd.git
+REPO=https://github.com/bws/xdd.git
 TAG=HEAD
 DEST=xdd
 GIT="git"

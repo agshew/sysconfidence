@@ -59,29 +59,7 @@ NAMES = ["",
   
 
 
-preamble = """#!/usr/bin/gnuplot
-set macros
-Node   = "using 3:6"
-Nodemin= "using 3:7"
-PW     = "using 3:10"
-PWmin  = "using 3:12"
-OS     = "using 3:9"
-OSmin  = "using 3:11"
-Timer  = "using 3:4"
-set style line 1 lt rgb "green" lw 3 pt 0
-set style line 2 lt rgb "red" lw 3 pt 0
-set style line 3 lt rgb "blue" lw 3 pt 0
-set style line 4 lt rgb "#FF00FF" lw 3 pt 0
-set style line 5 lt rgb "cyan" lw 3 pt 0
-set style line 6 lt rgb "greenyellow" lw 3 pt 0
-set style line 7 lt rgb "#A9A9A9" lw 3 pt 0
-set style line 8 lt rgb "#48D1CC" lw 3 pt 0
-set style line 9 lt rgb "orangered" lw 3 pt 0
-set style line 1 lt rgb "#BA55D3" lw 3 pt 0
-
-set terminal png medium size 1600,1200
-set xlabel "Latency (microseconds)"
-"""
+preamble = """"""
 
 def min_max_with_index(condata,colnumber):
     """return a set of minimums, maximums, as well as percentile locations (from CDF) for the given data set and column"""
@@ -223,10 +201,6 @@ class dataFile(object):
         #print first column
         for i in range(3,NUM_STATS):
             stats = min_max_with_index(self.rows, i)
-            self.columns[i].xmin = stats[0]
-            self.columns[i].xmax = stats[1]
-            self.columns[i].ymin = stats[2]
-            self.columns[i].ymax = stats[3]
 
             if re.search("CDF", self.filename):
                 self.columns[i].p50th = stats[4]
@@ -251,25 +225,13 @@ class caseData(object):
             self.datafiles[f] = dataFile(self.casename+"/"+DATAFILES[f]);
             self.datafiles[f].parse()
 
-def graphString(graphtype, graphnum, cases): # expects a list of cases
+def percentileString(graphtype, graphnum, cases): # expects a list of cases
     """return a string representing the gnuplot command to
        create a graph for the given type (cdf, pdf, histogram)
        given a column to graph and the various different cases"""
 
-    outfile = '"%s-%s.png"' % (graphtype, NAMES[graphnum])
+    percentiles = ["50th", "90th", "99th", "99.9th", "99.99th", "99.999th", "99.9999th", "99.99999th", "100th"]
 
-    zoom = ""
-    if graphtype == "cdf-0.9":
-        graphtype = "cdf"
-        zoom = "0.9"
-    elif graphtype == "cdf-0.99":
-        graphtype = "cdf"
-        zoom = "0.99"
-
-    xmins = []
-    xmaxs = []
-    ymins = []
-    ymaxs = []
     p50s = []
     p90s = []
     p99s = []
@@ -280,11 +242,9 @@ def graphString(graphtype, graphnum, cases): # expects a list of cases
     p99_99999s = []
     p100s = []
 
+    ps = [p50s, p90s, p99s, p99_9s, p99_99s, p99_999s, p99_9999s, p99_99999s, p100s]
+
     for c in cases:
-        xmins.append(c.datafiles[graphtype].columns[graphnum].xmin)
-        xmaxs.append(c.datafiles[graphtype].columns[graphnum].xmax)
-        ymins.append(c.datafiles[graphtype].columns[graphnum].ymin)
-        ymaxs.append(c.datafiles[graphtype].columns[graphnum].ymax)
         p50s.append(c.datafiles[graphtype].columns[graphnum].p50th)
         p90s.append(c.datafiles[graphtype].columns[graphnum].p90th)
         p99s.append(c.datafiles[graphtype].columns[graphnum].p99th)
@@ -295,122 +255,18 @@ def graphString(graphtype, graphnum, cases): # expects a list of cases
         p99_99999s.append(c.datafiles[graphtype].columns[graphnum].p99_99999th)
         p100s.append(c.datafiles[graphtype].columns[graphnum].p100th)
 
-    percentiles = ["50th", "90th", "99th", "99.9th", "99.99th", "99.999th", "99.9999th", "99.99999th", "100th"]
-    probabilities = ["0.5", "0.9", "0.99", "0.999", "0.9999", "0.99999", "0.999999", "0.9999999", "1.0"]
-    ps = [p50s, p90s, p99s, p99_9s, p99_99s, p99_999s, p99_9999s, p99_99999s, p100s]
-
-    xmin = min(xmins)
-    xmax = max(xmaxs)
-    ymin = min(ymins)
-    ymax = max(ymaxs)
-    p90s = [i for i in p90s if i > 0]
-    p90th = 1.0e-6
-    if p90s:
-         p90th = min(p90s)
-    p99s = [i for i in p99s if i > 0]
-    p99th = 1.0e-6
-    if p99s:
-         p99th = min(p99s)
-    p99_999th = max(p99_999s)
-    p100th = max(p100s)
-
-    #stderr.write("%s: xmin: %e xmax: %e ymin: %e ymax: %e\n" % (outfile, xmin, xmax, ymin, ymax))
-
-    if ymax == 0.0:
-        if ymin == 0.0:
-            ymax = 1.1
-        else:
-            ymax = 1.0
-
-
-
-    if xmin == 0.0 and xmax == 0.0:
-        xmax = 1.0
-
-
-    if graphtype == "cdf":
-        if not zoom:
-            output = "unset logscale\nset logscale x\nunset label\n"
-        else:
-            output = "unset logscale\nunset label\n"
-# get some slightly better mins/maxes
-        if xmin < 1.0e-6:
-            #print "Min x for %s was %e, resetting\n" % ( outfile, xmin )
-            xmin = 1.0e-6
-        else:
-            xmin = pow(10,floor(log10(xmin)))
-
-	if p100th > 0:
-            xmax = pow(10,ceil(log10(p100th)))
-
-        if zoom == "0.9":
-            xmin = p90th - p90th % 10
-            xmax = p99_999th
-            ymin = 0.9
-            ymax = 0.99999
-        elif zoom == "0.99":
-            xmin = p99th - p99th % 10
-            xmax = p99_999th
-            ymin = 0.99
-            ymax = 0.99999
-
-        output += "# Machine %s Latency (usec) Percentiles\n" % (NAMES[graphnum])
-        output += "# Percentile\t%s\n#" % ('\t'.join([c.casename for c in cases]))
-        casename_lengths = [len(c.casename) for c in cases]
-        for i, p in enumerate(percentiles):
-            output += '\n# {:^10s}'.format(p)
-            for j, c in enumerate(cases):
-                if ps[i][j] <= 0:
-                    continue
-                dynlength = '\t{:' + str(casename_lengths[j]) + '.4f}'
-                output += dynlength.format(ps[i][j])
-        output += "\n\n"
-
-        for i, p in enumerate(probabilities):
-            for j, c in enumerate(cases):
-                if ps[i][j] <= 0:
-                    continue
-                output += '# set label sprintf("%%g", %e) at %e,%s front point offset -0.01,0.1\n' % (ps[i][j], ps[i][j], p)
-    elif graphtype == "pdf":
-        output = "unset logscale\nset logscale xy\n"
-        if xmin < 1.0e-6:
-            #print "Min x for %s was %e, resetting\n" % ( outfile, xmin )
-            xmin = 1.0e-6
-        else:
-            xmin = pow(10,floor(log10(xmin)))
-
-        if xmax > 0:
-            xmax = pow(10,ceil(log10(xmax)))
-
-        if ymin < 1.0e-12:
-            #print "Min y for %s was %e, resetting\n" % ( outfile, ymin )
-            ymin = 1.0
-        else:
-            ymin = pow(10,floor(log10(ymin)))
-        #print "type: %s num: %s ymax: %e\n" % (graphtype, graphnum, ymax)
-
-        if xmax > 0:
-            ymax = pow(10,ceil(log10(ymax)))
-    else:
-        output = "unset logscale\n"
-
-   
-    #stderr.write("  FINAL: %s: xmin: %e xmax: %e ymin: %e ymax: %e\n\n" % (outfile, xmin, xmax, ymin, ymax))
-
-    output += 'set output %s\nset xr [%e:%e]\nset yr [%e:%e]\n' % ( outfile, xmin, xmax, ymin, ymax) 
-    if not zoom:
-        output += 'set title "Confidence %s Latency Observations"' % (NAMES[graphnum])
-    else:
-        output += 'set title "Confidence %s Latency Observations CDF %s-0.99999"' % (NAMES[graphnum], zoom)
-    output += '\nplot \\\n'
-    ls = 1
-    extrachars = ""
-    for c in cases:
-        output += '%s   "%s" using %d:%d title "%s" with linespoints ls %d' % ( extrachars, c.datafiles[graphtype].filename, BINTOP+1,graphnum+1,c.casename, ls)
-        ls += 1
-        extrachars = ", \\\n"
+    output = "Machine %s Latency (usec) Percentiles\n" % (NAMES[graphnum])
+    output += "Percentile\t%s\n" % ('\t'.join([c.casename for c in cases]))
+    casename_lengths = [len(c.casename) for c in cases]
+    for i, p in enumerate(percentiles):
+        output += '\n{:^10s}'.format(p)
+        for j, c in enumerate(cases):
+            if ps[i][j] <= 0:
+                continue
+            dynlength = '\t{:' + str(casename_lengths[j]) + '.4f}'
+            output += dynlength.format(ps[i][j])
+    output += "\n\n"
     
-    output += "\n"
     return output
 
 
@@ -420,7 +276,6 @@ def main():
     cases = []
     parser = OptionParser()
     parser.add_option("-o", "--output", dest="outfile", help="output filename")
-    parser.add_option("-z", "--zoom", dest="zoom", help="zoom in on percentile of CDF")
     (options, args) = parser.parse_args()
 
     for arg in args:
@@ -433,14 +288,8 @@ def main():
     output = preamble
 
     for i in range(3,12):
-        output += graphString("pdf", i, cases)
+        output += percentileString("cdf", i, cases)
 
-        if not options.zoom:
-            output += graphString("cdf", i, cases)
-        else:
-            output += graphString("cdf-0.9", i, cases)
-
-        output += graphString("histogram", i, cases)
     if options.outfile:
         fh = open(options.outfile, "w")
     else:

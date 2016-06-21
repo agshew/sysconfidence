@@ -211,9 +211,11 @@ void net_MPI_test(test_p tst, measurement_p m) {
 #ifndef SHMEM
 	buffer_t *sbuf, *rbuf;
 	double *cos, *cpw, *t;
+	double runtime, global_runtime;
 	int i, icycle, istage, ierr, partner_rank;
-	ORB_t t1, t2, t3;
+	ORB_t t0, t1, t2, t3, tw;
 	MPI_Status mpistatus;
+
 	sbuf = comm_newbuffer(m->buflen);	/* exchange buffers */
 	rbuf = comm_newbuffer(m->buflen);
 	cos = (double *)malloc(tst->num_messages * sizeof(double));	/* array for onesided kernel timings */
@@ -224,8 +226,14 @@ void net_MPI_test(test_p tst, measurement_p m) {
 	assert(t != NULL);
 	/* calibrate timer */
 	ORB_calibrate();
+	ORB_read(t0);
 	/* pre-synchronize all tasks */
 	ierr = MPI_Barrier(MPI_COMM_WORLD);
+
+	ORB_read(t3);
+	runtime = ORB_seconds(t3, t0);
+	ROOTONLY printf("Confidence: %g post-synchronize all tasks\n", runtime);
+
 	/*****************************************************************************
 	 * A full set of samples for this task consists of message exchanges with each
 	 * possible partner. The innermost loop below exchanges some number of messages
@@ -245,6 +253,7 @@ void net_MPI_test(test_p tst, measurement_p m) {
 				/***************************************/
 				/* warm-up / pre-synchronize this pair */
 				/***************************************/
+				ORB_read(tw);
 				for (i = 0; i < tst->num_warmup; i++) {
 					ORB_read(t1);
 					ORB_read(t2);
@@ -292,6 +301,17 @@ void net_MPI_test(test_p tst, measurement_p m) {
 				net_measurement_bin(tst, m, t, cos, cpw, (node_id[my_rank] == node_id[partner_rank]));
 			} /* if valid pairing */
 		} /* for istage */
+		runtime = ORB_seconds(t3, t0);
+                if (icycle % 10 == 0)
+			ROOTONLY printf("Confidence: %g cycle %d of %d\n", runtime, icycle, tst->num_cycles);
+
+		MPI_Allreduce(&runtime, &global_runtime, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+
+		if (global_runtime >= tst->max_duration ) {
+			ROOTONLY printf("Confidence: %g stopping at cycle %d of %d due runtime exceeding max_duration=%g\n",
+				global_runtime, icycle, tst->num_cycles, tst->max_duration);
+			break;
+		}
 	} /* for icycle */
 	free(t);
 	free(cpw);

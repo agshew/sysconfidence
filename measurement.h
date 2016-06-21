@@ -23,6 +23,8 @@
 #ifndef _MEASUREMENT_H
 #define _MEASUREMENT_H
 
+#include <zlib.h>
+
 #include "types.h"
 
 /**************************************************************
@@ -52,7 +54,7 @@ void measurement_write_cdf(test_p tst, measurement_p m);
 void measurement_write_pdf(test_p tst, measurement_p m);
 void measurement_write_hist(test_p tst, measurement_p m);
 void measurement_fmthist(test_p tst, histogram_p h, char *label);
-void measurement_print_header(FILE *outfile, test_p tst, char *measurement_label, char *hist_label);
+void measurement_print_header(gzFile outfile, test_p tst, char *measurement_label, char *hist_label);
 
 
 #endif /* _MEASUREMENT_H */
